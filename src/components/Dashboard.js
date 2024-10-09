@@ -53,7 +53,10 @@ const Dashboard = ({ snags, onAddSnag, onDeleteSnag }) => {
           {Object.entries(groupedSnags).map(([room, roomSnags]) => (
             <div key={room} className="room-group">
               <h3 className="room-title">{room}</h3>
-              <SnagList snags={roomSnags} onDeleteSnag={onDeleteSnag} />
+              <SnagList 
+                snags={filteredSnags} 
+                onDeleteSnag={onDeleteSnag}
+              />
             </div>
           ))}
         </div>

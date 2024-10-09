@@ -19,4 +19,4 @@ const SnagList = ({ snags, onDeleteSnag }) => {
   );
 };
 
-export default SnagList;
+export default React.memo(SnagList);

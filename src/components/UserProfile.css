@@ -1,0 +1,28 @@
+.user-profile {
+    background-color: #f0f8ff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .user-profile h2 {
+    color: #0056b3;
+    margin-bottom: 10px;
+  }
+  
+  .user-profile p {
+    margin-bottom: 15px;
+  }
+  
+  .user-profile button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .user-profile button:hover {
+    background-color: #c82333;
+  }

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { login } from '../services/api';
+import { register } from '../services/api';
 
-const Login = ({ onLogin }) => {
+const Register = ({ onRegister }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -10,11 +10,11 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setError('');
     try {
-      const data = await login(username, password);
+      const data = await register(username, password);
       localStorage.setItem('token', data.token);
-      onLogin();
+      onRegister();
     } catch (error) {
-      setError('Login failed. Please check your credentials.');
+      setError('Registration failed. ' + error.message);
     }
   };
 
@@ -35,9 +35,9 @@ const Login = ({ onLogin }) => {
         placeholder="Password"
         required
       />
-      <button type="submit">Login</button>
+      <button type="submit">Register</button>
     </form>
   );
 };
 
-export default Login;
+export default Register;

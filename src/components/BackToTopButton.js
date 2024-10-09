@@ -1,21 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { FaArrowUp } from 'react-icons/fa';
 
 const BackToTopButton = () => {
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
+  const toggleVisibility = useCallback(() => {
+    setIsVisible(window.pageYOffset > 300);
+  }, []);
 
+  useEffect(() => {
     window.addEventListener('scroll', toggleVisibility);
     return () => window.removeEventListener('scroll', toggleVisibility);
-  }, []);
+  }, [toggleVisibility]);
 
   const scrollToTop = () => {
     window.scrollTo({
@@ -24,12 +20,13 @@ const BackToTopButton = () => {
     });
   };
 
+  if (!isVisible) return null;
+
   return (
-    isVisible && 
-    <button onClick={scrollToTop} className="back-to-top">
+    <button onClick={scrollToTop} className="back-to-top" aria-label="Back to top">
       <FaArrowUp />
     </button>
   );
 };
 
-export default BackToTopButton;
+export default React.memo(BackToTopButton);

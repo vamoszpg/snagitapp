@@ -100,6 +100,7 @@ const Header = ({ onAddSnag, notifications, clearNotification, isDarkMode, toggl
           </div>
         </div>
       )}
+      <button onClick={onLogout}>Logout</button>
     </header>
   );
 };

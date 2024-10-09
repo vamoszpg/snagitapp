@@ -1,12 +1,14 @@
 import React from 'react';
 
 const PrintableSnagList = React.forwardRef(({ snags }, ref) => {
+  const currentDate = new Date().toLocaleDateString();
+
   return (
     <div className="printable-snag-list" ref={ref}>
       <div className="print-header">
         <div className="print-header-logo">Snag It</div>
         <div className="print-header-info">
-          <div>Report Date: {new Date().toLocaleDateString()}</div>
+          <div>Report Date: {currentDate}</div>
           <div>Snag It Ltd.</div>
           <div>123 Main St, City, Country</div>
         </div>
@@ -47,5 +49,7 @@ const PrintableSnagList = React.forwardRef(({ snags }, ref) => {
     </div>
   );
 });
+
+PrintableSnagList.displayName = 'PrintableSnagList';
 
 export default PrintableSnagList;
