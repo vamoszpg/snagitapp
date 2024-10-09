@@ -1,91 +1,78 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import SnagForm from './SnagForm';
 import SnagList from './SnagList';
+import './Dashboard.css';
 
-const Dashboard = () => {
-  const [snags, setSnags] = useState([]);
+const Dashboard = ({ snags, onAddSnag, onDeleteSnag }) => {
+  const [selectedRoom, setSelectedRoom] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortOption, setSortOption] = useState('room');
 
-  const handleAddSnag = (room, description, image) => {
-    const newSnag = {
-      id: Date.now(),
-      room,
-      description,
-      image,
-      date: new Date(),
-    };
-    setSnags([...snags, newSnag]);
-  };
+  const rooms = ['All', ...new Set(snags.map(snag => snag.category))];
 
-  const handleDeleteSnag = (id) => {
-    setSnags(snags.filter(snag => snag.id !== id));
-  };
+  const filteredSnags = snags.filter(snag => 
+    (selectedRoom === 'All' || snag.category === selectedRoom) &&
+    (snag.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+     snag.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const handleEditSnag = (id, updatedSnag) => {
-    setSnags(snags.map(snag => snag.id === id ? { ...snag, ...updatedSnag } : snag));
-  };
-
-  const filteredAndSortedSnags = snags
-    .filter(snag => snag.description.toLowerCase().includes(searchTerm.toLowerCase()))
-    .sort((a, b) => {
-      if (sortOption === 'room') {
-        const roomComparison = a.room.localeCompare(b.room);
-        if (roomComparison !== 0) return roomComparison;
-        return new Date(b.date) - new Date(a.date);
-      } else if (sortOption === 'date') {
-        return new Date(b.date) - new Date(a.date);
-      } else if (sortOption === 'description') {
-        return a.description.localeCompare(b.description);
-      }
-      return 0;
-    });
+  const groupedSnags = filteredSnags.reduce((acc, snag) => {
+    if (!acc[snag.category]) {
+      acc[snag.category] = [];
+    }
+    acc[snag.category].push(snag);
+    return acc;
+  }, {});
 
   return (
     <div className="dashboard">
-      <div className="dashboard-summary">
-        <h2>Dashboard Overview</h2>
-        <div className="summary-stats">
-          <div className="stat-item">
-            <span className="stat-value">{snags.length}</span>
-            <span className="stat-label">Total Snags</span>
-          </div>
-        </div>
-      </div>
+      <h2 className="dashboard-title">Dashboard</h2>
       <div className="dashboard-content">
-        <div className="snag-form-section">
-          <h3>Add New Snag</h3>
-          <SnagForm onSubmit={handleAddSnag} />
-        </div>
-        <div className="snag-list-section">
-          <h3>Snag List</h3>
-          <div className="search-sort-container">
-            <input
-              type="text"
-              placeholder="Search snags..."
+        <div className="dashboard-controls">
+          <div className="filter-search-container">
+            <select 
+              value={selectedRoom} 
+              onChange={(e) => setSelectedRoom(e.target.value)}
+              className="room-filter"
+            >
+              {rooms.map(room => (
+                <option key={room} value={room}>{room}</option>
+              ))}
+            </select>
+            <input 
+              type="text" 
+              placeholder="Search snags..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="search-input"
+              className="snag-search"
             />
-            <select 
-              value={sortOption} 
-              onChange={(e) => setSortOption(e.target.value)} 
-              className="sort-select"
-            >
-              <option value="room">Sort by Room</option>
-              <option value="date">Sort by Date</option>
-              <option value="description">Sort by Description</option>
-            </select>
           </div>
-          <SnagList 
-            roomSnags={filteredAndSortedSnags} 
-            onDelete={handleDeleteSnag}
-            onEdit={handleEditSnag}
-          />
+        </div>
+        <SnagForm onSubmit={onAddSnag} />
+        <div className="snag-list">
+          {Object.entries(groupedSnags).map(([room, roomSnags]) => (
+            <div key={room} className="room-group">
+              <h3 className="room-title">{room}</h3>
+              <SnagList snags={roomSnags} onDeleteSnag={onDeleteSnag} />
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
+};
+
+Dashboard.propTypes = {
+  snags: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.number.isRequired,
+    category: PropTypes.string.isRequired,
+    title: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    image: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(File)]),
+    date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
+  })).isRequired,
+  onAddSnag: PropTypes.func.isRequired,
+  onDeleteSnag: PropTypes.func.isRequired,
 };
 
 export default Dashboard;

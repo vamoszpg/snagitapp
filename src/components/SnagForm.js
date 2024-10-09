@@ -1,71 +1,78 @@
 import React, { useState } from 'react';
 
 const SnagForm = ({ onSubmit }) => {
-  const [room, setRoom] = useState('');
+  const [category, setCategory] = useState('');
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
-  const [fileName, setFileName] = useState('No file chosen');
+
+  const categories = [
+    'Bedroom', 'Bathroom', 'Kitchen', 'Living Room', 
+    'Dining Room', 'Garden', 'Garage', 'Attic', 
+    'Basement', 'Hallway', 'Office', 'Other'
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(room, description, image);
-    setRoom('');
+    onSubmit(category, title, description, image);
+    setCategory('');
+    setTitle('');
     setDescription('');
     setImage(null);
-    setFileName('No file chosen');
   };
 
   const handleImageChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files[0]) {
       setImage(e.target.files[0]);
-      setFileName(e.target.files[0].name);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="snag-form">
-      <div className="form-group">
-        <label htmlFor="room">Room:</label>
+      <h3>Add New Snag</h3>
+      <div>
+        <label htmlFor="category">Room:</label>
         <select
-          id="room"
-          value={room}
-          onChange={(e) => setRoom(e.target.value)}
+          id="category"
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
           required
         >
           <option value="">Select a room</option>
-          <option value="Living Room">Living Room</option>
-          <option value="Kitchen">Kitchen</option>
-          <option value="Bedroom">Bedroom</option>
-          <option value="Bathroom">Bathroom</option>
-          <option value="Other">Other</option>
+          {categories.map((room) => (
+            <option key={room} value={room}>{room}</option>
+          ))}
         </select>
       </div>
-      <div className="form-group">
-        <label htmlFor="description">Snag Description:</label>
+      <div>
+        <label htmlFor="title">Title:</label>
+        <input
+          type="text"
+          id="title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <label htmlFor="description">Description:</label>
         <textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           required
-        ></textarea>
+        />
       </div>
-      <div className="form-group">
-        <label htmlFor="image">Upload Image:</label>
-        <div className="file-input-container">
-          <label htmlFor="image" className="file-input-button">
-            Choose File
-          </label>
-          <input
-            type="file"
-            id="image"
-            onChange={handleImageChange}
-            accept="image/*"
-            className="file-input"
-          />
-          <span className="file-name-display">{fileName}</span>
-        </div>
+      <div>
+        <label htmlFor="image">Image:</label>
+        <input
+          type="file"
+          id="image"
+          onChange={handleImageChange}
+          accept="image/*"
+        />
       </div>
-      <button type="submit" className="submit-btn">Submit Snag</button>
+      <button type="submit">Add Snag</button>
     </form>
   );
 };

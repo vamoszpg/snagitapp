@@ -1,0 +1,58 @@
+.dashboard {
+    padding: 20px;
+  }
+  
+  .dashboard-title {
+    margin-bottom: 20px;
+  }
+  
+  .dashboard-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .dashboard-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .filter-search-container {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .room-filter,
+  .snag-search {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .room-filter {
+    width: 120px;
+  }
+  
+  .snag-search {
+    width: 200px;
+  }
+  
+  .snag-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+  }
+  
+  .room-group {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    background-color: #f9f9f9;
+  }
+  
+  .room-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }

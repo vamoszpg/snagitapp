@@ -1,0 +1,95 @@
+@media print {
+    body * {
+      visibility: hidden;
+    }
+    .reports, .reports * {
+      visibility: visible;
+    }
+    .reports {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+    .no-print {
+      display: none;
+    }
+    
+    /* Header styles */
+    .print-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #333;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .print-logo {
+      height: 50px;
+    }
+    .print-header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+    
+    /* Content styles */
+    .report-category {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin-bottom: 20px;
+    }
+    .category-title {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .report-item {
+      display: flex;
+      margin-bottom: 15px;
+      page-break-inside: avoid;
+    }
+    .report-image {
+      width: 100px;
+      margin-right: 15px;
+    }
+    .report-image img {
+      max-width: 100%;
+      height: auto;
+    }
+    .report-content {
+      flex: 1;
+    }
+    .report-title {
+      font-size: 16px;
+      margin: 0 0 5px 0;
+    }
+    .report-description {
+      font-size: 14px;
+      margin: 0 0 5px 0;
+    }
+    .report-date {
+      font-size: 12px;
+      margin: 0;
+    }
+    
+    /* Footer styles */
+    .print-footer {
+      position: running(footer);
+      text-align: center;
+      font-size: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #333;
+    }
+    @page {
+      margin: 2cm;
+      @bottom-center {
+        content: element(footer);
+      }
+    }
+    
+    /* Ensure the last page has a footer */
+    .reports::after {
+      content: '';
+      display: block;
+      height: 100px;
+    }
+  }

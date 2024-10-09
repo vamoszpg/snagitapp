@@ -1,33 +1,21 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import './Login.css';
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, onSwitchToSignup }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError('');
-
-    try {
-      // Here, you would typically make an API call to authenticate
-      // For now, we'll just simulate a successful login
-      await onLogin(username, password);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Invalid username or password');
-    }
+    onLogin(username, password);
   };
 
   return (
     <div className="login-container">
-      <form onSubmit={handleSubmit} className="login-form">
-        <h2>Login to Snag It</h2>
-        {error && <p className="error-message">{error}</p>}
-        <div className="form-group">
-          <label htmlFor="username">Username:</label>
+      <h2>Welcome to Snag It</h2>
+      <form onSubmit={handleSubmit}>
+        <div className="input-group">
+          <label htmlFor="username">Username</label>
           <input
             type="text"
             id="username"
@@ -36,8 +24,8 @@ const Login = ({ onLogin }) => {
             required
           />
         </div>
-        <div className="form-group">
-          <label htmlFor="password">Password:</label>
+        <div className="input-group">
+          <label htmlFor="password">Password</label>
           <input
             type="password"
             id="password"
@@ -46,8 +34,11 @@ const Login = ({ onLogin }) => {
             required
           />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" className="login-button">Log In</button>
       </form>
+      <p className="signup-prompt">
+        Don't have an account? <button onClick={onSwitchToSignup} className="switch-button">Sign Up</button>
+      </p>
     </div>
   );
 };

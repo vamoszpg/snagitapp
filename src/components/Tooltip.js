@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Tooltip = ({ children, text }) => {
+const Tooltip = ({ text, children }) => {
   return (
     <div className="tooltip-container">
       {children}
