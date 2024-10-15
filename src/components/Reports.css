@@ -1,96 +1,289 @@
 .reports {
-    padding: 2rem;
-  }
-  
-  .reports-title {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-bottom: 2rem;
-    border-bottom: 2px solid var(--primary-color);
-    padding-bottom: 0.5rem;
-  }
-  
-  .report-category {
-    margin-bottom: 2rem;
-  }
-  
-  .category-title {
-    font-size: 1.5rem;
-    color: var(--secondary-color);
-    margin-bottom: 1rem;
-  }
-  
-  .report-item {
-    display: flex;
-    background-color: var(--card-background);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 1rem;
-  }
-  
-  .report-image {
-    flex: 0 0 200px;
-    background-color: #f0f0f0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .report-image img {
-    max-width: 100%;
-    max-height: 200px;
-    object-fit: cover;
-  }
-  
-  .report-content {
-    flex: 1;
-    padding: 1rem;
-  }
-  
-  .report-title {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-  }
-  
-  .report-description {
-    margin-bottom: 0.5rem;
-  }
-  
-  .report-date {
-    font-size: 0.9rem;
-    color: #666;
-  }
-  
-  /* Responsive design */
-  @media (max-width: 768px) {
-    .report-item {
-      flex-direction: column;
-    }
-  
-    .report-image {
-      flex: 0 0 auto;
-      height: 200px;
-    }
-  }
-  
-  /* Dark mode styles */
-  .dark-mode .reports-title,
-  .dark-mode .category-title,
-  .dark-mode .report-title {
-    color: var(--primary-color);
-  }
-  
-  .dark-mode .report-item {
-    background-color: var(--card-background);
-  }
-  
-  .dark-mode .report-image {
-    background-color: #2c2c2c;
-  }
-  
-  .dark-mode .report-date {
-    color: #999;
-  }
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #f0f4f8;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.reports-title {
+  margin-bottom: 20px;
+  color: #2c3e50;
+  font-size: 28px;
+  font-weight: 600;
+  border-bottom: 2px solid #3498db;
+  padding-bottom: 10px;
+}
+
+.reports-container {
+  display: flex;
+  flex: 1;
+  gap: 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+  border: 1px solid #d1d8e0;
+}
+
+.reports-list {
+  flex: 0 0 300px;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid #e0e6ed;
+  padding: 20px;
+  overflow: hidden;
+}
+
+.reports-controls {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.search-and-sort {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-container input {
+  width: calc(100% - 2px); /* Subtracting 2px for borders */
+  padding: 8px 30px 8px 10px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #7f8c8d;
+}
+
+.sort-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.sort-btn {
+  flex: 1;
+}
+
+.sort-order-btn {
+  width: 40px;
+}
+
+.sort-btn,
+.sort-order-btn {
+  padding: 8px 12px;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  background-color: #ecf0f1;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* Ensure consistent widths */
+.search-container,
+.sort-controls {
+  width: 100%;
+}
+
+.reports-scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.report-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #d1d8e0;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.report-item:hover {
+  background-color: #f5f7fa;
+  border-color: #3498db;
+}
+
+.report-info h4 {
+  margin: 0 0 5px 0;
+  color: #34495e;
+}
+
+.report-info p {
+  margin: 0;
+  font-size: 0.9em;
+  color: #7f8c8d;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.view-btn,
+.delete-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.view-btn {
+  background-color: #3498db;
+  color: white;
+}
+
+.view-btn:hover {
+  background-color: #2980b9;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+.report-view {
+  flex: 1;
+  padding: 30px;
+  overflow-y: auto;
+  border-left: 2px solid #e0e6ed;
+}
+
+.report-header {
+  background-color: #ecf0f1;
+  border: 1px solid #bdc3c7;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.report-header h3 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 24px;
+  border-bottom: 1px solid #bdc3c7;
+  padding-bottom: 10px;
+}
+
+.report-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #34495e;
+}
+
+.export-btn,
+.close-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.export-btn {
+  background-color: #27ae60;
+  color: white;
+  margin-right: 10px;
+}
+
+.export-btn:hover {
+  background-color: #2ecc71;
+}
+
+.close-btn {
+  background-color: #95a5a6;
+  color: white;
+}
+
+.close-btn:hover {
+  background-color: #7f8c8d;
+}
+
+.report-content {
+  margin-top: 20px;
+}
+
+.report-snag-item {
+  border: 1px solid #d1d8e0;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.report-snag-item:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.report-snag-item h4 {
+  margin-top: 0;
+  color: #2c3e50;
+  border-bottom: 1px solid #d1d8e0;
+  padding-bottom: 10px;
+}
+
+.snag-image {
+  max-width: 100%;
+  height: auto;
+  margin-top: 15px;
+  border-radius: 4px;
+  border: 1px solid #d1d8e0;
+}
+
+.no-report-selected {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #7f8c8d;
+  font-size: 18px;
+  border: 2px dashed #bdc3c7;
+  border-radius: 8px;
+  padding: 40px;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 24px;
+  z-index: 1000;
+}

@@ -1,0 +1,37 @@
+.snag-form {
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  
+  .snag-form h3 {
+    margin-top: 0;
+    color: #007bff;
+  }
+  
+  .snag-form input[type="text"],
+  .snag-form select,
+  .snag-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .snag-form button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .snag-form button:hover {
+    background-color: #0056b3;
+  }

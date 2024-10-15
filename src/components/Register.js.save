@@ -1,5 +1,6 @@
+   nano /Users/zakgoldman/Development/Snagit/src/components/Register.js
 import React, { useState } from 'react';
-import { register } from '../services/api';
+import { register } from '../services/old api';
 
 const Register = ({ onRegister, onClose }) => {
   const [username, setUsername] = useState('');

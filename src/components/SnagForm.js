@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 const SnagForm = ({ onSubmit }) => {
   const [category, setCategory] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
+  const [error, setError] = useState('');
 
   const categories = [
     'Bedroom', 'Bathroom', 'Kitchen', 'Living Room', 
@@ -12,29 +14,45 @@ const SnagForm = ({ onSubmit }) => {
     'Basement', 'Hallway', 'Office', 'Other'
   ];
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(category, title, description, image);
-    setCategory('');
-    setTitle('');
-    setDescription('');
-    setImage(null);
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    console.log('Attempting to add snag:', { category, title, description, image });
+
+    try {
+      const newSnag = {
+        category,
+        title,
+        description,
+        image: image ? URL.createObjectURL(image) : null,
+        date: new Date().toISOString()
+      };
+
+      console.log('New snag created:', newSnag);
+      onSubmit(newSnag);
+
+      // Reset form fields
+      setCategory('');
+      setTitle('');
+      setDescription('');
+      setImage(null);
+      setError('');
+    } catch (error) {
+      console.error('Error adding snag:', error);
+      setError('Failed to add snag. Please try again.');
+    }
   };
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+      setImage(e.target.files[0]);
+      console.log('Image file selected:', e.target.files[0].name);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="snag-form">
+    <form onSubmit={handleSubmit} className="snag-form" encType="multipart/form-data">
       <h3>Add New Snag</h3>
+      {error && <p className="error-message">{error}</p>}
       <div>
         <label htmlFor="category">Room:</label>
         <select
@@ -80,6 +98,10 @@ const SnagForm = ({ onSubmit }) => {
       <button type="submit">Add Snag</button>
     </form>
   );
+};
+
+SnagForm.propTypes = {
+  onSubmit: PropTypes.func.isRequired,
 };
 
 export default SnagForm;

@@ -1,209 +1,283 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
+import { FaFileAlt, FaTrashAlt, FaEye, FaFilePdf, FaSearch, FaSort } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';  // Make sure to install this package: npm install jspdf-autotable
 import './Reports.css';
 
-const Reports = ({ snags }) => {
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+const Reports = ({ savedReports, onDeleteReport }) => {
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const groupSnagsByCategory = (snags) => {
-    return snags.reduce((acc, snag) => {
-      if (!acc[snag.category]) {
-        acc[snag.category] = [];
-      }
-      acc[snag.category].push(snag);
-      return acc;
-    }, {});
+  const filteredAndSortedReports = useMemo(() => {
+    return savedReports
+      .filter(report => report.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .sort((a, b) => {
+        if (sortBy === 'date') {
+          return sortOrder === 'asc' 
+            ? new Date(a.createdAt) - new Date(b.createdAt)
+            : new Date(b.createdAt) - new Date(a.createdAt);
+        } else {
+          return sortOrder === 'asc'
+            ? a.name.localeCompare(b.name)
+            : b.name.localeCompare(a.name);
+        }
+      });
+  }, [savedReports, searchTerm, sortBy, sortOrder]);
+
+  const handleSelectReport = (report) => {
+    setSelectedReport(report);
   };
 
-  const filteredSnags = snags.filter(snag => 
-    (!startDate || new Date(snag.date) >= new Date(startDate)) &&
-    (!endDate || new Date(snag.date) <= new Date(endDate))
-  );
-
-  const groupedSnags = groupSnagsByCategory(filteredSnags);
-
-  const getBase64Image = (imgUrl) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      };
-      img.onerror = reject;
-      img.src = imgUrl;
-    });
+  const handleClearSelection = () => {
+    setSelectedReport(null);
   };
 
-  const processSnagImage = async (snag) => {
-    if (!snag.image) return 'No image';
-    
+  const handleDeleteReport = async (id) => {
+    setIsLoading(true);
     try {
-      const imageUrl = snag.image instanceof File ? URL.createObjectURL(snag.image) : snag.image;
-      const base64Image = await getBase64Image(imageUrl);
-      return `<img src="${base64Image}" alt="${snag.title}" style="max-width: 200px; max-height: 200px;">`;
+      await onDeleteReport(id);
+      if (selectedReport && selectedReport.id === id) {
+        setSelectedReport(null);
+      }
     } catch (error) {
-      console.error('Error processing image:', error);
-      return 'Error loading image';
+      console.error('Error deleting report:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const generateHtmlContent = (snagRows) => `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Snag Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; }
-          table { border-collapse: collapse; width: 100%; }
-          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-          th { background-color: #f2f2f2; }
-          tr:nth-child(even) { background-color: #f9f9f9; }
-          h1 { color: #333; }
-        </style>
-      </head>
-      <body>
-        <h1>Snag Report</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Category</th>
-              <th>Title</th>
-              <th>Description</th>
-              <th>Date</th>
-              <th>Image</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${snagRows.join('')}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `;
+  const handleExportToPDF = async () => {
+    if (!selectedReport) return;
+    setIsLoading(true);
 
-  const exportToHTML = async () => {
-    const snagRows = await Promise.all(filteredSnags.map(async (snag) => {
-      const imageHtml = await processSnagImage(snag);
-      return `
-        <tr>
-          <td>${snag.id}</td>
-          <td>${snag.category}</td>
-          <td>${snag.title}</td>
-          <td>${snag.description}</td>
-          <td>${new Date(snag.date).toLocaleString()}</td>
-          <td>${imageHtml}</td>
-        </tr>
-      `;
-    }));
+    try {
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.width;
+      const pageHeight = pdf.internal.pageSize.height;
+      const margin = 15;
+      const contentWidth = pageWidth - 2 * margin;
 
-    const htmlContent = generateHtmlContent(snagRows);
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `snags_report_${new Date().toISOString().split('T')[0]}.html`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+      // Colors
+      const primaryColor = [0, 123, 255];  // #007bff
+      const secondaryColor = [108, 117, 125];  // #6c757d
+      const lightGray = [240, 240, 240];  // #f0f0f0
+
+      // Helper function to add header and footer
+      const addHeaderAndFooter = () => {
+        // Header
+        pdf.setFillColor(...primaryColor);
+        pdf.rect(0, 0, pageWidth, 20, 'F');
+        pdf.setTextColor(255);
+        pdf.setFontSize(12);
+        pdf.text('Snag It Report', margin, 14);
+        // Footer
+        pdf.setFillColor(...lightGray);
+        pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+        pdf.setTextColor(...secondaryColor);
+        pdf.setFontSize(8);
+        pdf.text(`Generated on ${new Date().toLocaleDateString()}`, margin, pageHeight - 5);
+        pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+      };
+
+      // Add first page
+      addHeaderAndFooter();
+
+      // Title
+      pdf.setFontSize(24);
+      pdf.setTextColor(...primaryColor);
+      pdf.text(selectedReport.name, pageWidth / 2, 40, { align: 'center' });
+
+      // Report info
+      pdf.setFontSize(12);
+      pdf.setTextColor(...secondaryColor);
+      pdf.text(`Created: ${new Date(selectedReport.createdAt).toLocaleDateString()}`, margin, 55);
+      pdf.text(`Total Snags: ${selectedReport.snags.length}`, pageWidth - margin, 55, { align: 'right' });
+
+      let yOffset = 70;
+
+      // Add snags
+      for (const [index, snag] of selectedReport.snags.entries()) {
+        const snagHeight = 10 + 30 + 100 + 30;  // Title + Table + Image + Padding
+
+        // Check if there's enough space on the current page
+        if (yOffset + snagHeight > pageHeight - 30) {
+          pdf.addPage();
+          addHeaderAndFooter();
+          yOffset = 30;
+        }
+
+        // Snag title
+        pdf.setFontSize(16);
+        pdf.setTextColor(...primaryColor);
+        pdf.text(`Snag ${index + 1}: ${snag.title || 'No Title'}`, margin, yOffset);
+        yOffset += 10;
+
+        // Snag details table
+        pdf.autoTable({
+          startY: yOffset,
+          head: [['Room', 'Description', 'Date']],
+          body: [
+            [
+              snag.category || 'Not specified',
+              snag.description || 'No description',
+              snag.date ? new Date(snag.date).toLocaleDateString() : 'Not specified'
+            ]
+          ],
+          headStyles: { fillColor: primaryColor, textColor: 255 },
+          alternateRowStyles: { fillColor: lightGray },
+          margin: { left: margin, right: margin },
+          tableWidth: contentWidth
+        });
+
+        yOffset = pdf.lastAutoTable.finalY + 10;
+
+        // Add image if available
+        if (snag.image) {
+          try {
+            const imgData = await fetchImageAsBase64(snag.image);
+            const imgProps = pdf.getImageProperties(imgData);
+            const imgWidth = contentWidth;
+            const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+            pdf.addImage(imgData, 'JPEG', margin, yOffset, imgWidth, imgHeight, undefined, 'FAST');
+            yOffset += imgHeight + 10;
+          } catch (error) {
+            console.error('Error adding image to PDF:', error);
+            pdf.text('Error loading image', margin, yOffset);
+            yOffset += 10;
+          }
+        }
+
+        // Add some space between snags
+        yOffset += 20;
+      }
+
+      // Add header and footer to all pages
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        addHeaderAndFooter();
+      }
+
+      pdf.save(`${selectedReport.name}_report.pdf`);
+    } catch (error) {
+      console.error('Error exporting to PDF:', error);
+      alert('Error generating PDF. Please check the console for details.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchImageAsBase64 = async (url) => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   return (
     <div className="reports">
-      <h2 className="reports-title">Snag Reports</h2>
-      <div className="report-controls">
-        <div className="date-filter">
-          <label htmlFor="start-date">Start Date:</label>
-          <input 
-            type="date" 
-            id="start-date"
-            value={startDate} 
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-          <label htmlFor="end-date">End Date:</label>
-          <input 
-            type="date" 
-            id="end-date"
-            value={endDate} 
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+      <h2 className="reports-title">Saved Reports</h2>
+      <div className="reports-container">
+        <div className="reports-list">
+          <div className="reports-controls">
+            <div className="search-and-sort">
+              <div className="search-container">
+                <FaSearch className="search-icon" />
+                <input
+                  type="text"
+                  placeholder="Search reports..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <div className="sort-controls">
+                <button onClick={() => setSortBy(sortBy === 'date' ? 'name' : 'date')} className="sort-btn">
+                  Sort by: {sortBy === 'date' ? 'Date' : 'Name'}
+                </button>
+                <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="sort-order-btn">
+                  {sortOrder === 'asc' ? '↑' : '↓'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="reports-scroll-container">
+            {filteredAndSortedReports.map(report => (
+              <div key={report.id} className="report-item" onClick={() => handleSelectReport(report)}>
+                <div className="report-info">
+                  <h4>{report.name}</h4>
+                  <p>Created: {new Date(report.createdAt).toLocaleDateString()}</p>
+                  <p>Snags: {report.snags.length}</p>
+                </div>
+                <div className="report-actions">
+                  <button onClick={(e) => { e.stopPropagation(); handleSelectReport(report); }} className="view-btn">
+                    <FaEye /> View
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteReport(report.id); }} className="delete-btn">
+                    <FaTrashAlt /> Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <button onClick={exportToHTML} className="export-button">
-          Export Report
-        </button>
+        <div className="report-view">
+          {selectedReport ? (
+            <>
+              <h3>{selectedReport.name}</h3>
+              <div className="report-stats">
+                <p>Created: {new Date(selectedReport.createdAt).toLocaleDateString()}</p>
+                <p>Total Snags: {selectedReport.snags.length}</p>
+              </div>
+              <button 
+                onClick={() => {
+                  console.log("Export to PDF button clicked");
+                  handleExportToPDF();
+                }} 
+                className="export-btn" 
+                disabled={isLoading}
+              >
+                <FaFilePdf /> {isLoading ? 'Exporting...' : 'Export to PDF'}
+              </button>
+              <button onClick={handleClearSelection} className="close-btn">
+                Close Report
+              </button>
+              <div className="report-content">
+                {selectedReport.snags.map(snag => (
+                  <div key={snag.id} className="report-snag-item">
+                    <h4>{snag.title}</h4>
+                    <p><strong>Category:</strong> {snag.category}</p>
+                    <p><strong>Description:</strong> {snag.description}</p>
+                    <p><strong>Date:</strong> {new Date(snag.date).toLocaleDateString()}</p>
+                    {snag.image && (
+                      <img src={snag.image} alt={snag.title} className="snag-image" />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="no-report-selected">
+              <p>Select a report to view its details</p>
+            </div>
+          )}
+        </div>
       </div>
-      <div className="report-content">
-        {Object.entries(groupedSnags).map(([category, categorySnags]) => (
-          <ReportCategory key={category} category={category} snags={categorySnags} />
-        ))}
-      </div>
+      {isLoading && <div className="loading-overlay">Loading...</div>}
     </div>
   );
 };
 
-const ReportCategory = ({ category, snags }) => (
-  <div className="report-category">
-    <h3 className="category-title">{category}</h3>
-    {snags.map(snag => (
-      <ReportItem key={snag.id} snag={snag} />
-    ))}
-  </div>
-);
-
-const ReportItem = ({ snag }) => (
-  <div className="report-item">
-    <div className="report-image">
-      {snag.image && (
-        <img 
-          src={snag.image instanceof File ? URL.createObjectURL(snag.image) : snag.image} 
-          alt={snag.title} 
-        />
-      )}
-    </div>
-    <div className="report-content">
-      <h4 className="report-title">{snag.title}</h4>
-      <p className="report-description">{snag.description}</p>
-      <p className="report-date">
-        <strong>Date:</strong> {new Date(snag.date).toLocaleString()}
-      </p>
-    </div>
-  </div>
-);
-
 Reports.propTypes = {
-  snags: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    category: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    image: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(File)]),
-    date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
-  })).isRequired,
-};
-
-ReportCategory.propTypes = {
-  category: PropTypes.string.isRequired,
-  snags: PropTypes.arrayOf(PropTypes.object).isRequired,
-};
-
-ReportItem.propTypes = {
-  snag: PropTypes.shape({
-    id: PropTypes.number.isRequired,
-    category: PropTypes.string.isRequired,
-    title: PropTypes.string.isRequired,
-    description: PropTypes.string.isRequired,
-    image: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(File)]),
-    date: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
-  }).isRequired,
+  savedReports: PropTypes.array.isRequired,
+  onDeleteReport: PropTypes.func.isRequired,
 };
 
 export default Reports;
