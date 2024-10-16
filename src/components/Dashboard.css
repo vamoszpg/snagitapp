@@ -2,12 +2,14 @@
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dashboard-title {
   text-align: center;
   color: #007bff;
   margin-bottom: 20px;
+  transition: color 0.3s ease;
 }
 
 .dashboard-content {
@@ -18,40 +20,36 @@
 
 .dashboard-controls {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 15px;
   margin-bottom: 20px;
-  align-items: center;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.control-group {
+  display: flex;
+  gap: 10px;
+  transition: background-color 0.3s ease;
 }
 
 .room-filter,
 .snag-search,
-.report-name {
-  padding: 12px;
+.report-name,
+.email-input {
+  flex: 1;
+  padding: 10px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.room-filter {
-  min-width: 150px;
-}
-
-.snag-search,
-.report-name {
-  flex-grow: 1;
-}
-
-.room-filter:focus,
-.snag-search:focus,
-.report-name:focus {
-  border-color: #80bdff;
-  outline: 0;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 .save-report-btn,
+.send-email-btn,
 .export-pdf-btn,
 .clear-snags-btn {
   padding: 10px 15px;
@@ -59,25 +57,23 @@
   border-radius: 4px;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  white-space: nowrap;
 }
 
 .save-report-btn {
-  background-color: #28a745;
-  color: white;
-}
-
-.save-report-btn:hover {
-  background-color: #218838;
-}
-
-.export-pdf-btn {
   background-color: #007bff;
   color: white;
 }
 
-.export-pdf-btn:hover {
-  background-color: #0056b3;
+.send-email-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.export-pdf-btn {
+  background-color: #ffc107;
+  color: #212529;
 }
 
 .clear-snags-btn {
@@ -85,12 +81,16 @@
   color: white;
 }
 
+.save-report-btn:hover,
+.send-email-btn:hover,
+.export-pdf-btn:hover,
 .clear-snags-btn:hover {
-  background-color: #c82333;
+  opacity: 0.9;
 }
 
-.save-report-btn:disabled {
-  opacity: 0.7;
+.save-report-btn:disabled,
+.send-email-btn:disabled {
+  background-color: #6c757d;
   cursor: not-allowed;
 }
 
@@ -177,4 +177,231 @@
   padding-bottom: 5px;
   border-bottom: 2px solid #007bff;
   color: #007bff;
+}
+
+.email-input {
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  flex-grow: 1;
+  margin-right: 10px;
+}
+
+.email-input:focus {
+  border-color: #80bdff;
+  outline: 0;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.send-email-btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  background-color: #28a745;
+  color: white;
+}
+
+.send-email-btn:hover {
+  background-color: #218838;
+}
+
+.send-email-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .control-group {
+    flex-direction: column;
+  }
+
+  .room-filter,
+  .snag-search,
+  .report-name,
+  .email-input,
+  .save-report-btn,
+  .send-email-btn,
+  .export-pdf-btn,
+  .clear-snags-btn {
+    width: 100%;
+  }
+}
+
+.dashboard.dark.mode {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+.dashboard.dark.mode .dashboard-title {
+  color: #ecf0f1;
+}
+
+.dashboard.dark.mode .dashboard-controls {
+  background-color: #34495e;
+}
+
+.dashboard.dark.mode .dashboard-controls {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.dashboard.dark.mode .control-group {
+  background-color: #2c3e50;
+}
+
+.dashboard.dark.mode .room-filter,
+.dashboard.dark.mode .snag-search,
+.dashboard.dark.mode .report-name,
+.dashboard.dark.mode .email-input {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+  border-color: #34495e;
+}
+
+.dashboard.dark.mode .room-filter option {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+.dashboard.dark.mode .save-report-btn,
+.dashboard.dark.mode .send-email-btn,
+.dashboard.dark.mode .export-pdf-btn,
+.dashboard.dark.mode .clear-snags-btn {
+  background-color: #3498db;
+  color: #ecf0f1;
+}
+
+.dashboard.dark.mode .save-report-btn:hover,
+.dashboard.dark.mode .send-email-btn:hover,
+.dashboard.dark.mode .export-pdf-btn:hover,
+.dashboard.dark.mode .clear-snags-btn:hover {
+  background-color: #2980b9;
+}
+
+.dashboard.dark.mode .save-report-btn:disabled,
+.dashboard.dark.mode .send-email-btn:disabled {
+  background-color: #7f8c8d;
+  cursor: not-allowed;
+}
+
+/* Add styles for placeholder text in dark mode */
+.dashboard.dark.mode .snag-search::placeholder,
+.dashboard.dark.mode .report-name::placeholder,
+.dashboard.dark.mode .email-input::placeholder {
+  color: #bdc3c7;
+}
+
+/* Add more dark mode styles for other elements as needed */
+
+.dashboard.dark-mode {
+  background-color: #2c3e50;
+  color: #ecf0f1;
+}
+
+.dashboard.dark-mode .dashboard-title {
+  color: #ecf0f1;
+}
+
+.dashboard.dark-mode .dashboard-controls {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+}
+
+.dashboard.dark-mode .control-group {
+  background-color: #2a2a2a;
+}
+
+.dashboard.dark-mode .room-filter,
+.dashboard.dark-mode .snag-search,
+.dashboard.dark-mode .report-name,
+.dashboard.dark-mode .email-input {
+  background-color: #333333;
+  color: #f0f0f0;
+  border-color: #4a4a4a;
+}
+
+.dashboard.dark-mode .room-filter option {
+  background-color: #333333;
+  color: #f0f0f0;
+}
+
+.dashboard.dark-mode .save-report-btn,
+.dashboard.dark-mode .send-email-btn,
+.dashboard.dark-mode .export-pdf-btn,
+.dashboard.dark-mode .clear-snags-btn {
+  background-color: #4a4a4a;
+  color: #f0f0f0;
+}
+
+.dashboard.dark-mode .save-report-btn:hover,
+.dashboard.dark-mode .send-email-btn:hover,
+.dashboard.dark-mode .export-pdf-btn:hover,
+.dashboard.dark-mode .clear-snags-btn:hover {
+  background-color: #5a5a5a;
+}
+
+.dashboard.dark-mode .save-report-btn:disabled,
+.dashboard.dark-mode .send-email-btn:disabled {
+  background-color: #3a3a3a;
+  color: #888888;
+}
+
+.dashboard.dark-mode .snag-search::placeholder,
+.dashboard.dark-mode .report-name::placeholder,
+.dashboard.dark-mode .email-input::placeholder {
+  color: #888888;
+}
+
+/* Add or update these styles in your Dashboard.css file */
+
+.snag-form label,
+.snag-form select,
+.snag-form input[type="text"],
+.snag-form textarea,
+.snag-form input[type="file"] {
+  color: #333333; /* Dark gray color for better readability */
+}
+
+.snag-form select,
+.snag-form input[type="text"],
+.snag-form textarea {
+  background-color: #ffffff; /* White background */
+  border: 1px solid #cccccc; /* Light gray border */
+}
+
+.snag-form select option {
+  color: #333333; /* Ensure dropdown options are also visible */
+}
+
+.snag-form input[type="file"] {
+  color: #333333; /* Dark text for the file input */
+}
+
+.snag-form input[type="file"]::file-selector-button {
+  color: #ffffff; /* White text for the "Choose File" button */
+  background-color: #3A86FF; /* Use your primary color */
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.snag-form input[type="file"]::file-selector-button:hover {
+  background-color: #2a75e6; /* Slightly darker on hover */
+}
+
+/* If you're using a custom file input styling, adjust accordingly */
+.custom-file-input {
+  color: #333333;
+}
+
+/* Ensure placeholder text is visible but distinguishable */
+.snag-form input::placeholder,
+.snag-form textarea::placeholder {
+  color: #999999;
 }

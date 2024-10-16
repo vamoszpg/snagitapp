@@ -4,11 +4,22 @@ import SnagForm from './SnagForm';
 import { exportToPDF } from '../utils/pdfExport';
 import './Dashboard.css';
 
-const Dashboard = ({ snags, onAddSnag, onDeleteSnag, onSaveReport, onClearAllSnags }) => {
+const Dashboard = ({ 
+  snags, 
+  onAddSnag, 
+  onDeleteSnag, 
+  onSaveReport, 
+  onClearAllSnags, 
+  isDarkMode
+}) => {
+  console.log('Dashboard isDarkMode:', isDarkMode);
   const [selectedRoom, setSelectedRoom] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [reportName, setReportName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [isEmailSending, setIsEmailSending] = useState(false);
+  const [error, setError] = useState('');
 
   const rooms = ['All', ...new Set(snags.map(snag => snag.category))];
 
@@ -26,76 +37,136 @@ const Dashboard = ({ snags, onAddSnag, onDeleteSnag, onSaveReport, onClearAllSna
     return acc;
   }, {});
 
-  const handleSaveReport = async () => {
-    if (!reportName) {
-      alert('Please enter a report name');
+  const handleSaveReport = () => {
+    if (reportName.trim() === '') {
+      setError('Please enter a report name');
       return;
     }
-    setIsLoading(true);
+
+    const report = {
+      name: reportName,
+      snags: filteredSnags,
+      createdAt: new Date().toISOString(),
+    };
+
+    onSaveReport(report);
+    setReportName('');
+    setError('');
+  };
+
+  const handleExportToPDF = async () => {
+    // Assuming you have a way to get the current report data
+    const currentReport = {
+      name: reportName,
+      createdAt: new Date(),
+      snags: snags,
+    };
+
     try {
-      const newReport = {
-        name: reportName,
-        snags: filteredSnags.map(snag => ({
-          id: snag.id,
-          title: snag.title,
-          category: snag.category,
-          description: snag.description,
-          date: snag.date,
-          image: snag.image
-        })),
-        createdAt: new Date().toISOString()
-      };
-      console.log("Saving new report:", newReport);
-      await onSaveReport(newReport);
-      setReportName('');
+      await exportToPDF(currentReport);
     } catch (error) {
-      console.error('Error saving report:', error);
-      alert('Failed to save report. Please try again.');
-    } finally {
-      setIsLoading(false);
+      console.error('Error exporting to PDF:', error);
+      alert('Error generating PDF. Please check the console for details.');
     }
   };
 
-  const handleExportToPDF = () => {
-    exportToPDF(filteredSnags, reportName || 'Snag Report');
+  const handleSendEmail = async () => {
+    if (!recipientEmail) {
+      alert('Please enter a recipient email address.');
+      return;
+    }
+
+    setIsEmailSending(true);
+
+    try {
+      // Generate PDF
+      const pdfBlob = await exportToPDF(snags, 'Snag Report');
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('recipient', recipientEmail);
+      formData.append('subject', 'Snag Report');
+      formData.append('message', 'Please find attached the Snag Report.');
+      formData.append('attachment', pdfBlob, 'snag_report.pdf');
+
+      // Send email
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/send-email`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert('Email sent successfully!');
+        setRecipientEmail('');
+      } else {
+        throw new Error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert('Failed to send email. Please try again.');
+    } finally {
+      setIsEmailSending(false);
+    }
   };
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${isDarkMode ? 'dark-mode' : ''}`}>
       <h2 className="dashboard-title">Dashboard</h2>
       <div className="dashboard-controls">
-        <select 
-          value={selectedRoom} 
-          onChange={(e) => setSelectedRoom(e.target.value)}
-          className="room-filter"
-        >
-          {rooms.map(room => (
-            <option key={room} value={room}>{room}</option>
-          ))}
-        </select>
-        <input 
-          type="text" 
-          placeholder="Search snags..." 
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="snag-search"
-        />
-        <input 
-          type="text"
-          placeholder="Report Name"
-          value={reportName}
-          onChange={(e) => setReportName(e.target.value)}
-          className="report-name"
-        />
-        <button 
-          onClick={handleSaveReport} 
-          className="save-report-btn" 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Saving...' : 'Save Report'}
-        </button>
-        <button onClick={handleExportToPDF} className="export-pdf-btn">Export to PDF</button>
-        <button onClick={onClearAllSnags} className="clear-snags-btn">Clear All Snags</button>
+        <div className="control-group">
+          <select 
+            value={selectedRoom} 
+            onChange={(e) => setSelectedRoom(e.target.value)}
+            className="room-filter"
+          >
+            {rooms.map(room => (
+              <option key={room} value={room}>{room}</option>
+            ))}
+          </select>
+          <input 
+            type="text" 
+            placeholder="Search snags..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="snag-search"
+          />
+        </div>
+        <div className="control-group">
+          <input 
+            type="text"
+            placeholder="Report Name"
+            value={reportName}
+            onChange={(e) => setReportName(e.target.value)}
+            className="report-name"
+          />
+          <button 
+            onClick={handleSaveReport} 
+            className="save-report-btn" 
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Report'}
+          </button>
+        </div>
+        <div className="control-group">
+          <input
+            type="email"
+            value={recipientEmail}
+            onChange={(e) => setRecipientEmail(e.target.value)}
+            placeholder="Recipient's email"
+            className="email-input"
+          />
+          <button
+            onClick={handleSendEmail}
+            disabled={isEmailSending}
+            className="send-email-btn"
+          >
+            {isEmailSending ? 'Sending...' : 'Send Report'}
+          </button>
+        </div>
+        <div className="control-group">
+          <button onClick={handleExportToPDF} className="export-pdf-btn">Export to PDF</button>
+          <button onClick={onClearAllSnags} className="clear-snags-btn">Clear All Snags</button>
+        </div>
       </div>
       <SnagForm onSubmit={onAddSnag} />
       <div className="snag-grid">

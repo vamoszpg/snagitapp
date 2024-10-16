@@ -33,3 +33,54 @@
 .notification-item button:hover {
   color: #333;
 }
+
+.notifications-bar {
+  position: fixed;
+  top: 60px; /* Adjust based on your header height */
+  right: 20px;
+  z-index: 1000;
+}
+
+.notification {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.notification button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+/* Dark mode styles */
+.app-header.dark-mode .notification {
+  background-color: #2ecc71;
+  color: #1a1a1a;
+}
+
+.app-header.dark-mode .notification button {
+  color: #1a1a1a;
+}
+
+.App-header {
+  background-color: #2D78F5; /* Slightly darker shade of the primary blue */
+  /* ... other existing styles ... */
+}
+
+/* For dark mode, we'll use a darker variation */
+.App-header.dark-mode {
+  background-color: #1E5FCB; /* Even darker shade for dark mode */
+  /* ... other existing dark mode styles ... */
+}
+
+/* ... rest of your existing CSS ... */

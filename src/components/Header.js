@@ -3,7 +3,17 @@ import { FaUser, FaBell, FaPlus, FaMoon, FaSun, FaTimes, FaChartBar, FaSignOutAl
 import SnagForm from './SnagForm';
 import Tooltip from './Tooltip';
 
-const Header = ({ onAddSnag, notifications, clearNotification, isDarkMode, toggleDarkMode, activeTab, setActiveTab, onLogout }) => {
+const Header = ({ 
+  onAddSnag, 
+  notifications, 
+  removeNotification, 
+  addNotification,
+  isDarkMode, 
+  toggleDarkMode, 
+  activeTab, 
+  setActiveTab, 
+  onLogout 
+}) => {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -20,7 +30,7 @@ const Header = ({ onAddSnag, notifications, clearNotification, isDarkMode, toggl
   };
 
   return (
-    <header className="App-header">
+    <header className={`App-header ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="header-content">
         <h1>Snag It</h1>
         <nav className="header-nav">
@@ -61,7 +71,7 @@ const Header = ({ onAddSnag, notifications, clearNotification, isDarkMode, toggl
                 notifications.map(notif => (
                   <div key={notif.id} className="notification-item">
                     <p>{notif.message}</p>
-                    <button onClick={() => clearNotification(notif.id)}>
+                    <button onClick={() => removeNotification(notif.id)}>
                       <FaTimes />
                     </button>
                   </div>
@@ -93,8 +103,9 @@ const Header = ({ onAddSnag, notifications, clearNotification, isDarkMode, toggl
               <FaTimes />
             </button>
             <h2>Quick Add Snag</h2>
-            <SnagForm onSubmit={(category, title, description, image) => {
-              onAddSnag(category, title, description, image);
+            <SnagForm onSubmit={(newSnag) => {
+              onAddSnag(newSnag);
+              addNotification(`New snag added: ${newSnag.title}`);
               handleCloseQuickAdd();
             }} />
           </div>
