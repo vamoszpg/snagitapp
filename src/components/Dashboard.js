@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import SnagForm from './SnagForm';
-import { exportToPDF } from '../utils/pdfExport';
+import SnagList from './SnagList';
+import { FaFilePdf } from 'react-icons/fa';
 import './Dashboard.css';
+
+// Import the predefined rooms list
+import { predefinedRooms } from './SnagForm';
+
+import { exportToPDF } from '../utils/pdfExport';
 
 const Dashboard = ({ 
   snags, 
@@ -10,114 +16,114 @@ const Dashboard = ({
   onDeleteSnag, 
   onSaveReport, 
   onClearAllSnags, 
-  isDarkMode
+  isDarkMode,
+  addNotification
 }) => {
-  console.log('Dashboard isDarkMode:', isDarkMode);
   const [selectedRoom, setSelectedRoom] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [reportName, setReportName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [isEmailSending, setIsEmailSending] = useState(false);
-  const [error, setError] = useState('');
 
-  const rooms = ['All', ...new Set(snags.map(snag => snag.category))];
+  const rooms = useMemo(() => {
+    const uniqueRooms = [...new Set([...predefinedRooms, ...snags.map(snag => snag.category)])];
+    return ['All', ...uniqueRooms.sort()];
+  }, [snags]);
 
-  const filteredSnags = snags.filter(snag => 
-    (selectedRoom === 'All' || snag.category === selectedRoom) &&
-    ((snag.title && snag.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-     (snag.description && snag.description.toLowerCase().includes(searchTerm.toLowerCase())))
-  );
+  const filteredSnags = useMemo(() => 
+    snags.filter(snag => 
+      (selectedRoom === 'All' || snag.category === selectedRoom) &&
+      ((snag.title && snag.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+       (snag.description && snag.description.toLowerCase().includes(searchTerm.toLowerCase())))
+    ), [snags, selectedRoom, searchTerm]);
 
-  const groupedSnags = filteredSnags.reduce((acc, snag) => {
-    if (!acc[snag.category]) {
-      acc[snag.category] = [];
+  const groupedSnags = useMemo(() => 
+    filteredSnags.reduce((acc, snag) => {
+      if (!acc[snag.category]) {
+        acc[snag.category] = [];
+      }
+      acc[snag.category].push(snag);
+      return acc;
+    }, {}), [filteredSnags]);
+
+  const handleRoomChange = (e) => {
+    setSelectedRoom(e.target.value);
+  };
+
+  const handleAddSnag = async (formData) => {
+    try {
+      const newSnag = {
+        id: Date.now(),
+        category: formData.get('category'),
+        title: formData.get('title'),
+        description: formData.get('description'),
+        date: new Date().toISOString(),
+      };
+
+      const imageFile = formData.get('image');
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          newSnag.image = e.target.result;
+          onAddSnag(newSnag);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        onAddSnag(newSnag);
+      }
+    } catch (error) {
+      console.error('Error adding snag:', error);
     }
-    acc[snag.category].push(snag);
-    return acc;
-  }, {});
+  };
 
-  const handleSaveReport = () => {
-    if (reportName.trim() === '') {
-      setError('Please enter a report name');
+  const handleSaveReport = (reportName) => {
+    const reportSnags = snags.map(snag => ({
+      ...snag,
+      image: snag.image // Ensure the image data is included
+    }));
+
+    const newReport = {
+      id: Date.now(),
+      name: reportName,
+      snags: reportSnags,
+      createdAt: new Date().toISOString()
+    };
+    console.log('Dashboard: Saving report', newReport);
+    onSaveReport(newReport);
+  };
+
+  const handleExportToPDF = async () => {
+    if (snags.length === 0) {
+      addNotification('There are no snags to export');
       return;
     }
 
     const report = {
-      name: reportName,
-      snags: filteredSnags,
+      name: 'Current Snags',
       createdAt: new Date().toISOString(),
-    };
-
-    onSaveReport(report);
-    setReportName('');
-    setError('');
-  };
-
-  const handleExportToPDF = async () => {
-    // Assuming you have a way to get the current report data
-    const currentReport = {
-      name: reportName,
-      createdAt: new Date(),
-      snags: snags,
+      snags: snags
     };
 
     try {
-      await exportToPDF(currentReport);
+      await exportToPDF(report);
+      addNotification('PDF exported successfully');
     } catch (error) {
       console.error('Error exporting to PDF:', error);
-      alert('Error generating PDF. Please check the console for details.');
-    }
-  };
-
-  const handleSendEmail = async () => {
-    if (!recipientEmail) {
-      alert('Please enter a recipient email address.');
-      return;
-    }
-
-    setIsEmailSending(true);
-
-    try {
-      // Generate PDF
-      const pdfBlob = await exportToPDF(snags, 'Snag Report');
-
-      // Create form data
-      const formData = new FormData();
-      formData.append('recipient', recipientEmail);
-      formData.append('subject', 'Snag Report');
-      formData.append('message', 'Please find attached the Snag Report.');
-      formData.append('attachment', pdfBlob, 'snag_report.pdf');
-
-      // Send email
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/send-email`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        alert('Email sent successfully!');
-        setRecipientEmail('');
-      } else {
-        throw new Error('Failed to send email');
-      }
-    } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email. Please try again.');
-    } finally {
-      setIsEmailSending(false);
+      addNotification('Error exporting PDF. Please try again.');
     }
   };
 
   return (
     <div className={`dashboard ${isDarkMode ? 'dark-mode' : ''}`}>
-      <h2 className="dashboard-title">Dashboard</h2>
-      <div className="dashboard-controls">
-        <div className="control-group">
+      <SnagForm 
+        onSubmit={handleAddSnag} 
+        rooms={rooms.filter(room => room !== 'All')} 
+        onClearAllSnags={onClearAllSnags}
+        onSaveReport={handleSaveReport}
+      />
+      {snags.length > 0 && (
+        <div className="dashboard-controls">
           <select 
             value={selectedRoom} 
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            className="room-filter"
+            onChange={handleRoomChange}
+            className="room-select"
           >
             {rooms.map(room => (
               <option key={room} value={room}>{room}</option>
@@ -128,80 +134,25 @@ const Dashboard = ({
             placeholder="Search snags..." 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="snag-search"
-          />
-        </div>
-        <div className="control-group">
-          <input 
-            type="text"
-            placeholder="Report Name"
-            value={reportName}
-            onChange={(e) => setReportName(e.target.value)}
-            className="report-name"
+            className="search-input"
           />
           <button 
-            onClick={handleSaveReport} 
-            className="save-report-btn" 
-            disabled={isLoading}
+            className="export-pdf-btn" 
+            onClick={handleExportToPDF}
+            title="Export the current snag report as a PDF file"
           >
-            {isLoading ? 'Saving...' : 'Save Report'}
+            <FaFilePdf /> Export to PDF
           </button>
         </div>
-        <div className="control-group">
-          <input
-            type="email"
-            value={recipientEmail}
-            onChange={(e) => setRecipientEmail(e.target.value)}
-            placeholder="Recipient's email"
-            className="email-input"
-          />
-          <button
-            onClick={handleSendEmail}
-            disabled={isEmailSending}
-            className="send-email-btn"
-          >
-            {isEmailSending ? 'Sending...' : 'Send Report'}
-          </button>
-        </div>
-        <div className="control-group">
-          <button onClick={handleExportToPDF} className="export-pdf-btn">Export to PDF</button>
-          <button onClick={onClearAllSnags} className="clear-snags-btn">Clear All Snags</button>
-        </div>
-      </div>
-      <SnagForm onSubmit={onAddSnag} />
-      <div className="snag-grid">
-        {Object.entries(groupedSnags).map(([category, categorySnags]) => (
-          <div key={category} className="category-section">
-            <h3 className="category-title">{category}</h3>
-            <div className="category-snags">
-              {categorySnags.map(snag => (
-                <SnagItem key={snag.id} snag={snag} onDelete={onDeleteSnag} />
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+      )}
+      <SnagList 
+        groupedSnags={groupedSnags} 
+        onDeleteSnag={onDeleteSnag} 
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };
-
-const SnagItem = ({ snag, onDelete }) => (
-  <div className="snag-item">
-    <div className="snag-image-container">
-      {snag.image ? (
-        <img src={snag.image} alt={snag.title} className="snag-image" />
-      ) : (
-        <div className="snag-image-placeholder">No Image</div>
-      )}
-    </div>
-    <div className="snag-details">
-      <h4>{snag.title}</h4>
-      <p className="snag-description">{snag.description}</p>
-      <p className="snag-date">Date: {new Date(snag.date).toLocaleDateString()}</p>
-      <button onClick={() => onDelete(snag.id)} className="delete-button">Delete</button>
-    </div>
-  </div>
-);
 
 Dashboard.propTypes = {
   snags: PropTypes.array.isRequired,
@@ -209,6 +160,8 @@ Dashboard.propTypes = {
   onDeleteSnag: PropTypes.func.isRequired,
   onSaveReport: PropTypes.func.isRequired,
   onClearAllSnags: PropTypes.func.isRequired,
+  isDarkMode: PropTypes.bool.isRequired,
+  addNotification: PropTypes.func.isRequired,
 };
 
 export default Dashboard;

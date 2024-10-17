@@ -1,107 +1,153 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import { FaTrash, FaFileUpload, FaSave } from 'react-icons/fa';
+import './SnagForm.css';
 
-const SnagForm = ({ onSubmit }) => {
+export const predefinedRooms = [
+  // Interior Rooms
+  "Living Room",
+  "Dining Room",
+  "Kitchen",
+  "Master Bedroom",
+  "Bedroom",
+  "Bathroom",
+  "Ensuite",
+  "Home Office",
+  "Study",
+  "Playroom",
+  "Family Room",
+  "Laundry Room",
+  "Utility Room",
+  "Pantry",
+  "Closet",
+  "Hallway",
+  "Staircase",
+  "Attic",
+  "Basement",
+  "Garage",
+  
+  // Exterior Areas
+  "Front Yard",
+  "Back Yard",
+  "Patio",
+  "Deck",
+  "Balcony",
+  "Porch",
+  "Driveway",
+  "Walkway",
+  "Garden",
+  "Pool Area",
+  "Shed",
+  "Exterior Walls",
+  "Roof",
+  "Gutters",
+  "Fencing",
+  
+  // Additional Areas
+  "Other Interior",
+  "Other Exterior"
+];
+
+const SnagForm = ({ onSubmit, rooms, onClearAllSnags, onSaveReport }) => {
   const [category, setCategory] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [image, setImage] = useState(null);
-  const [error, setError] = useState('');
 
-  const categories = [
-    'Bedroom', 'Bathroom', 'Kitchen', 'Living Room', 
-    'Dining Room', 'Garden', 'Garage', 'Attic', 
-    'Basement', 'Hallway', 'Office', 'Other'
-  ];
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    console.log('Attempting to add snag:', { category, title, description, image });
-
-    try {
-      const newSnag = {
-        category,
-        title,
-        description,
-        image: image ? URL.createObjectURL(image) : null,
-        date: new Date().toISOString()
-      };
-
-      console.log('New snag created:', newSnag);
-      onSubmit(newSnag);
-
-      // Reset form fields
-      setCategory('');
-      setTitle('');
-      setDescription('');
-      setImage(null);
-      setError('');
-    } catch (error) {
-      console.error('Error adding snag:', error);
-      setError('Failed to add snag. Please try again.');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('category', category);
+    formData.append('title', title);
+    formData.append('description', description);
+    if (image) {
+      formData.append('image', image);
     }
+    onSubmit(formData);
+    setCategory('');
+    setTitle('');
+    setDescription('');
+    setImage(null);
   };
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
       setImage(e.target.files[0]);
-      console.log('Image file selected:', e.target.files[0].name);
+    }
+  };
+
+  const handleSaveReport = () => {
+    const reportName = prompt("Enter a name for this report:");
+    if (reportName) {
+      console.log('SnagForm: Saving report with name:', reportName);
+      onSaveReport(reportName);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="snag-form" encType="multipart/form-data">
-      <h3>Add New Snag</h3>
-      {error && <p className="error-message">{error}</p>}
-      <div>
-        <label htmlFor="category">Room:</label>
+    <form onSubmit={handleSubmit} className="snag-form">
+      <div className="form-group">
+        <label htmlFor="category">Select Room:</label>
         <select
           id="category"
+          name="category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           required
         >
-          <option value="">Select a room</option>
-          {categories.map((room) => (
+          <option value="" disabled>Select a room</option>
+          {rooms.map((room) => (
             <option key={room} value={room}>{room}</option>
           ))}
         </select>
       </div>
-      <div>
+      <div className="form-group">
         <label htmlFor="title">Title:</label>
         <input
           type="text"
           id="title"
+          name="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter snag title"
           required
         />
       </div>
-      <div>
+      <div className="form-group">
         <label htmlFor="description">Description:</label>
         <textarea
           id="description"
+          name="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter snag description"
           required
         />
       </div>
-      <div>
-        <label htmlFor="image">Image:</label>
-        <input
-          type="file"
-          id="image"
-          onChange={handleImageChange}
-          accept="image/*"
-        />
+      
+      <div className="form-actions">
+        <label htmlFor="file-input" className="file-input-label" title="Select an image file to attach to the snag">
+          Choose File
+          <input
+            type="file"
+            id="file-input"
+            onChange={handleImageChange}
+            style={{ display: 'none' }}
+          />
+        </label>
+        <button type="submit" className="add-snag-btn" title="Add a new snag to the list">Add Snag</button>
+        <button type="button" onClick={onClearAllSnags} className="clear-all-btn" title="Remove all snags from the list">Clear All Snags</button>
+        <button type="button" onClick={handleSaveReport} className="save-report-btn">Save Report</button>
       </div>
-      <button type="submit">Add Snag</button>
     </form>
   );
 };
 
 SnagForm.propTypes = {
   onSubmit: PropTypes.func.isRequired,
+  rooms: PropTypes.array.isRequired,
+  onClearAllSnags: PropTypes.func.isRequired,
+  onSaveReport: PropTypes.func.isRequired,
 };
 
 export default SnagForm;

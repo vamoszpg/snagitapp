@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-export const exportToPDF = async (snags, reportName) => {
+export const exportToPDF = async (report) => {
   const pdf = new jsPDF();
   const pageWidth = pdf.internal.pageSize.width;
   const pageHeight = pdf.internal.pageSize.height;
@@ -9,9 +9,9 @@ export const exportToPDF = async (snags, reportName) => {
   const contentWidth = pageWidth - 2 * margin;
 
   // Colors
-  const primaryColor = [0, 123, 255];
-  const secondaryColor = [108, 117, 125];
-  const lightGray = [240, 240, 240];
+  const primaryColor = [44, 62, 80]; // #2c3e50
+  const secondaryColor = [127, 140, 141]; // #7f8c8d
+  const lightGray = [236, 240, 241]; // #ecf0f1
 
   // Helper function to add header and footer
   const addHeaderAndFooter = () => {
@@ -19,7 +19,7 @@ export const exportToPDF = async (snags, reportName) => {
     pdf.rect(0, 0, pageWidth, 20, 'F');
     pdf.setTextColor(255);
     pdf.setFontSize(12);
-    pdf.text('Snag It Report', margin, 14);
+    pdf.text('Snag Report', margin, 14);
     
     pdf.setFillColor(...lightGray);
     pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
@@ -31,70 +31,89 @@ export const exportToPDF = async (snags, reportName) => {
 
   // Add cover page
   addHeaderAndFooter();
-  pdf.setFontSize(24);
+  pdf.setFontSize(28);
   pdf.setTextColor(...primaryColor);
-  pdf.text(reportName || 'Snag Report', pageWidth / 2, pageHeight / 2, { align: 'center' });
-  pdf.setFontSize(12);
+  pdf.text(report.name, pageWidth / 2, 50, { align: 'center' });
+  pdf.setFontSize(18);
   pdf.setTextColor(...secondaryColor);
-  pdf.text(`Total Snags: ${snags.length}`, pageWidth / 2, pageHeight / 2 + 10, { align: 'center' });
+  pdf.text('Snag Report', pageWidth / 2, 65, { align: 'center' });
+
+  pdf.setFontSize(12);
+  pdf.text(`Created: ${new Date(report.createdAt).toLocaleDateString()}`, margin, 90);
+  pdf.text(`Total Snags: ${report.snags.length}`, margin, 100);
+
   pdf.addPage();
 
   let yOffset = 30;
 
-  for (const [index, snag] of snags.entries()) {
-    const snagHeight = 80 + (snag.image ? 120 : 0);  // Estimated height for text + image + padding
+  // Group snags by room
+  const groupedSnags = report.snags.reduce((acc, snag) => {
+    if (!acc[snag.category]) {
+      acc[snag.category] = [];
+    }
+    acc[snag.category].push(snag);
+    return acc;
+  }, {});
 
-    if (yOffset + snagHeight > pageHeight - 30) {
+  for (const [room, snags] of Object.entries(groupedSnags)) {
+    if (yOffset > pageHeight - 60) {
       pdf.addPage();
       yOffset = 30;
     }
 
     addHeaderAndFooter();
 
-    // Snag title
+    // Room title
     pdf.setFontSize(16);
     pdf.setTextColor(...primaryColor);
-    pdf.text(`Snag ${index + 1}: ${snag.title || 'No Title'}`, margin, yOffset);
+    pdf.text(room, margin, yOffset);
     yOffset += 10;
 
-    // Snag details table
-    pdf.autoTable({
-      startY: yOffset,
-      head: [['Room', 'Description', 'Date']],
-      body: [
-        [
-          snag.category || 'Not specified',
-          snag.description || 'No description',
-          snag.date ? new Date(snag.date).toLocaleDateString() : 'Not specified'
-        ]
-      ],
-      headStyles: { fillColor: primaryColor, textColor: 255 },
-      alternateRowStyles: { fillColor: lightGray },
-      margin: { left: margin, right: margin },
-      tableWidth: contentWidth
-    });
+    for (const snag of snags) {
+      const snagHeight = 60 + (snag.image ? 120 : 0);  // Estimated height for text + image + padding
 
-    yOffset = pdf.lastAutoTable.finalY + 10;
-
-    // Add image if available
-    if (snag.image) {
-      try {
-        const img = new Image();
-        img.src = snag.image;
-        await new Promise((resolve) => { img.onload = resolve; });
-        const imgAspectRatio = img.width / img.height;
-        const imgWidth = contentWidth;
-        const imgHeight = imgWidth / imgAspectRatio;
-        pdf.addImage(snag.image, 'JPEG', margin, yOffset, imgWidth, imgHeight, undefined, 'FAST');
-        yOffset += imgHeight + 10;
-      } catch (error) {
-        console.error('Error adding image to PDF:', error);
-        pdf.text('Error loading image', margin, yOffset);
-        yOffset += 10;
+      if (yOffset + snagHeight > pageHeight - 30) {
+        pdf.addPage();
+        yOffset = 30;
+        addHeaderAndFooter();
       }
+
+      // Snag title
+      pdf.setFontSize(14);
+      pdf.setTextColor(...primaryColor);
+      pdf.text(snag.title || 'No Title', margin, yOffset);
+      yOffset += 10;
+
+      // Snag details
+      pdf.setFontSize(10);
+      pdf.setTextColor(...secondaryColor);
+      pdf.text(`Description: ${snag.description || 'No Description'}`, margin, yOffset);
+      yOffset += 7;
+      pdf.text(`Date: ${snag.date ? new Date(snag.date).toLocaleDateString() : 'Not specified'}`, margin, yOffset);
+      yOffset += 10;
+
+      // Add image if available
+      if (snag.image) {
+        try {
+          const img = new Image();
+          img.src = snag.image;
+          await new Promise((resolve) => { img.onload = resolve; });
+          const imgAspectRatio = img.width / img.height;
+          const imgWidth = Math.min(contentWidth, 150);
+          const imgHeight = imgWidth / imgAspectRatio;
+          pdf.addImage(snag.image, 'JPEG', margin, yOffset, imgWidth, imgHeight, undefined, 'FAST');
+          yOffset += imgHeight + 10;
+        } catch (error) {
+          console.error('Error adding image to PDF:', error);
+          pdf.text('Error loading image', margin, yOffset);
+          yOffset += 10;
+        }
+      }
+
+      yOffset += 15;  // Space between snags
     }
 
-    yOffset += 20;  // Space between snags
+    yOffset += 20;  // Space between rooms
   }
 
   // Add header and footer to all pages
@@ -104,5 +123,5 @@ export const exportToPDF = async (snags, reportName) => {
     addHeaderAndFooter();
   }
 
-  pdf.save(`${reportName || 'snag_report'}.pdf`);
+  pdf.save(`${report.name}.pdf`);
 };

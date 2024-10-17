@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 // import { getSnags, addSnag, deleteSnag } from './mockApi';
 import './App.css';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
-import Reports from './components/Reports';
-import './components/Reports.css';
+import Reports from './components/Reports/Reports';
+// import './components/Reports.css';
 import Footer from './components/Footer';
 import BackToTopButton from './components/BackToTopButton';
 import Login from './components/Login';
 import Register from './components/Register';
 import config from './config';
 import LandingPage from './components/LandingPage';  // Import the new LandingPage component
+import HowItWorks from './components/HowItWorks';
+import jsPDF from 'jspdf';
 
 function App() {
   console.log('API URL:', config.API_URL);
@@ -25,6 +28,7 @@ function App() {
   const [isLogin, setIsLogin] = useState(true);
   const [savedReports, setSavedReports] = useState([]);
   const [showLandingPage, setShowLandingPage] = useState(true);  // New state for showing landing page
+  const [reports, setReports] = useState([]);
 
   useEffect(() => {
     // Check if user has already entered email
@@ -34,6 +38,10 @@ function App() {
     }
     setSnags([]);
   }, []);
+
+  useEffect(() => {
+    console.log('App: Reports state updated:', reports);
+  }, [reports]);
 
   const handleAddSnag = (newSnag) => {
     setSnags(prevSnags => [...prevSnags, { ...newSnag, id: Date.now() }]);
@@ -47,7 +55,6 @@ function App() {
       message,
     };
     setNotifications(prevNotifications => [...prevNotifications, newNotification]);
-    // Increase the notification display time to 10 seconds (10000 milliseconds)
     setTimeout(() => {
       removeNotification(newNotification.id);
     }, 10000);
@@ -63,11 +70,13 @@ function App() {
     setSnags(prevSnags => prevSnags.filter(snag => snag.id !== id));
   };
 
-  const handleSaveReport = (report) => {
-    console.log("Received report in App.js:", report);
-    setSavedReports(prevReports => [...prevReports, { ...report, id: Date.now() }]);
-    // Add a notification when a report is saved
-    addNotification(`Report saved: ${report.name}`);
+  const handleSaveReport = (newReport) => {
+    console.log('App: Saving new report:', newReport);
+    setReports(prevReports => {
+      const updatedReports = [...prevReports, newReport];
+      console.log('App: Updated reports:', updatedReports);
+      return updatedReports;
+    });
   };
 
   const handleDeleteReport = (reportId) => {
@@ -96,11 +105,13 @@ function App() {
   };
 
   const handleLogout = () => {
+    // Implement your logout logic here
+    // For example:
+    localStorage.removeItem('userEmail');
     setUser(null);
     setIsAuthenticated(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('userEmail');
-    setShowLandingPage(true);  // Show landing page on logout
+    // Redirect to login page or show landing page
+    setShowLandingPage(true);
   };
 
   const recentSnags = snags.filter(snag => {
@@ -115,58 +126,102 @@ function App() {
     setShowLandingPage(false);
   };
 
+  const handleExportPDF = (snags) => {
+    const doc = new jsPDF();
+    let yOffset = 10;
+
+    doc.setFontSize(20);
+    doc.text('Snag Report', 105, yOffset, { align: 'center' });
+    yOffset += 20;
+
+    snags.forEach((snag, index) => {
+      doc.setFontSize(14);
+      doc.text(`Snag ${index + 1}: ${snag.title}`, 10, yOffset);
+      yOffset += 10;
+
+      doc.setFontSize(12);
+      doc.text(`Category: ${snag.category}`, 20, yOffset);
+      yOffset += 7;
+      doc.text(`Description: ${snag.description}`, 20, yOffset);
+      yOffset += 7;
+      doc.text(`Date: ${new Date(snag.date).toLocaleDateString()}`, 20, yOffset);
+      yOffset += 15;
+
+      if (snag.image) {
+        doc.addImage(snag.image, 'JPEG', 20, yOffset, 170, 100);
+        yOffset += 110;
+      }
+
+      if (yOffset > 280) {
+        doc.addPage();
+        yOffset = 10;
+      }
+    });
+
+    doc.save('snag_report.pdf');
+  };
+
   if (showLandingPage) {
-    return <LandingPage onEnter={handleEnter} />;
+    return (
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage onEnter={handleEnter} />} />
+          <Route path="/how-it-works" element={<HowItWorks />} />
+        </Routes>
+      </Router>
+    );
   }
 
   return (
-    <div className={`App ${isDarkMode ? 'dark-mode' : ''}`}>
-      {error && <div className="error-message">{error}</div>}
-      <Header 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onLogout={handleLogout}
-        notifications={notifications}
-        removeNotification={removeNotification}
-        addNotification={addNotification}
-        isDarkMode={isDarkMode}
-        toggleDarkMode={toggleDarkMode}
-        onAddSnag={handleAddSnag}
-        userEmail={localStorage.getItem('userEmail')}  // Pass userEmail to Header
-      />
-      <main className="main-content">
-        {activeTab === 'dashboard' ? (
-          <Dashboard 
-            snags={snags} 
-            onAddSnag={handleAddSnag}
-            onDeleteSnag={handleDeleteSnag}
-            onSaveReport={handleSaveReport}
-            onClearAllSnags={handleClearAllSnags}
-            isDarkMode={isDarkMode}
-          />
-        ) : activeTab === 'reports' ? (
-          <Reports 
-            savedReports={savedReports}
-            onDeleteReport={handleDeleteReport}
-            isDarkMode={isDarkMode}
-          />
-        ) : null}
-      </main>
-      <Footer isDarkMode={isDarkMode} />
-      <BackToTopButton />
-      {showAuthModal && (
-        <div className="auth-modal">
-          {isLogin ? (
-            <Login onLogin={handleLogin} onClose={() => setShowAuthModal(false)} />
-          ) : (
-            <Register onRegister={handleLogin} onClose={() => setShowAuthModal(false)} />
-          )}
-          <button onClick={() => setIsLogin(!isLogin)}>
-            {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
-          </button>
-        </div>
-      )}
-    </div>
+    <Router>
+      <div className={`App ${isDarkMode ? 'dark-mode' : ''}`}>
+        <Header 
+          isDarkMode={isDarkMode}
+          toggleDarkMode={toggleDarkMode}
+          onLogout={handleLogout}
+        />
+        <main className="main-content">
+          <Routes>
+            <Route path="/" element={
+              <Dashboard 
+                snags={snags} 
+                onAddSnag={handleAddSnag}
+                onDeleteSnag={handleDeleteSnag}
+                onSaveReport={handleSaveReport}
+                onClearAllSnags={handleClearAllSnags}
+                onExportPDF={handleExportPDF}
+                isDarkMode={isDarkMode}
+                addNotification={addNotification}
+              />
+            } />
+            <Route path="/reports" element={
+              <Reports 
+                savedReports={reports}
+                onDeleteReport={(id) => {
+                  setReports(prevReports => prevReports.filter(report => report.id !== id));
+                }}
+                isDarkMode={isDarkMode}
+                addNotification={addNotification}
+              />
+            } />
+          </Routes>
+        </main>
+        <Footer isDarkMode={isDarkMode} />
+        <BackToTopButton />
+        {showAuthModal && (
+          <div className="auth-modal">
+            {isLogin ? (
+              <Login onLogin={handleLogin} onClose={() => setShowAuthModal(false)} />
+            ) : (
+              <Register onRegister={handleLogin} onClose={() => setShowAuthModal(false)} />
+            )}
+            <button onClick={() => setIsLogin(!isLogin)}>
+              {isLogin ? 'Need an account? Register' : 'Already have an account? Login'}
+            </button>
+          </div>
+        )}
+      </div>
+    </Router>
   );
 }
 

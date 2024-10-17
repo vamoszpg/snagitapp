@@ -1,117 +1,48 @@
-import React, { useState } from 'react';
-import { FaUser, FaBell, FaPlus, FaMoon, FaSun, FaTimes, FaChartBar, FaSignOutAlt } from 'react-icons/fa';
-import SnagForm from './SnagForm';
-import Tooltip from './Tooltip';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaFileAlt, FaMoon, FaSun, FaSignOutAlt } from 'react-icons/fa';
+import './Header.css';
 
 const Header = ({ 
-  onAddSnag, 
-  notifications, 
-  removeNotification, 
-  addNotification,
   isDarkMode, 
-  toggleDarkMode, 
-  activeTab, 
-  setActiveTab, 
-  onLogout 
+  toggleDarkMode,
+  onLogout
 }) => {
-  const [showQuickAdd, setShowQuickAdd] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
+  const location = useLocation();
 
-  const handleQuickAdd = () => {
-    setShowQuickAdd(true);
-  };
-
-  const handleCloseQuickAdd = () => {
-    setShowQuickAdd(false);
-  };
-
-  const toggleNotifications = () => {
-    setShowNotifications(!showNotifications);
+  const handleLogout = () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      onLogout();
+    }
   };
 
   return (
     <header className={`App-header ${isDarkMode ? 'dark-mode' : ''}`}>
       <div className="header-content">
-        <h1>Snag It</h1>
+        <div className="logo">Snag It</div>
         <nav className="header-nav">
-          <button 
-            className={`nav-button ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
+          <Link 
+            to="/" 
+            className={`nav-button ${location.pathname === '/' ? 'active' : ''}`}
           >
-            Dashboard
-          </button>
-          <button 
-            className={`nav-button ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reports')}
+            <FaHome /> Dashboard
+          </Link>
+          <Link 
+            to="/reports" 
+            className={`nav-button ${location.pathname === '/reports' ? 'active' : ''}`}
           >
-            <FaChartBar /> Reports
-          </button>
+            <FaFileAlt /> Reports
+          </Link>
         </nav>
       </div>
       <div className="header-actions">
-        <Tooltip text="Add new snag">
-          <button className="header-button" onClick={handleQuickAdd}>
-            <FaPlus />
-          </button>
-        </Tooltip>
-        <div className="notification-container">
-          <Tooltip text="Notifications">
-            <button className="header-button" onClick={toggleNotifications}>
-              <FaBell />
-              {notifications.length > 0 && (
-                <span className="notification-badge">{notifications.length}</span>
-              )}
-            </button>
-          </Tooltip>
-          {showNotifications && (
-            <div className="notification-dropdown">
-              {notifications.length === 0 ? (
-                <p>No new notifications</p>
-              ) : (
-                notifications.map(notif => (
-                  <div key={notif.id} className="notification-item">
-                    <p>{notif.message}</p>
-                    <button onClick={() => removeNotification(notif.id)}>
-                      <FaTimes />
-                    </button>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-        <Tooltip text={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}>
-          <button className="header-button" onClick={toggleDarkMode}>
-            {isDarkMode ? <FaSun /> : <FaMoon />}
-          </button>
-        </Tooltip>
-        <Tooltip text="User profile">
-          <button className="header-button">
-            <FaUser />
-          </button>
-        </Tooltip>
-        <Tooltip text="Logout">
-          <button className="header-button" onClick={onLogout}>
-            <FaSignOutAlt />
-          </button>
-        </Tooltip>
+        <button onClick={toggleDarkMode} className="icon-button" title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}>
+          {isDarkMode ? <FaSun /> : <FaMoon />}
+        </button>
+        <button onClick={handleLogout} className="icon-button" title="Logout">
+          <FaSignOutAlt />
+        </button>
       </div>
-      {showQuickAdd && (
-        <div className="modal">
-          <div className="modal-content">
-            <button className="close-modal" onClick={handleCloseQuickAdd}>
-              <FaTimes />
-            </button>
-            <h2>Quick Add Snag</h2>
-            <SnagForm onSubmit={(newSnag) => {
-              onAddSnag(newSnag);
-              addNotification(`New snag added: ${newSnag.title}`);
-              handleCloseQuickAdd();
-            }} />
-          </div>
-        </div>
-      )}
-      <button onClick={onLogout}>Logout</button>
     </header>
   );
 };

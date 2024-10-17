@@ -32,32 +32,28 @@ export const exportToPDF = async (report) => {
     pdf.text(`Page ${pdf.internal.getNumberOfPages()}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
   };
 
-  // Add first page
+  // Add cover page
   addHeaderAndFooter();
-
-  // Title
   pdf.setFontSize(24);
   pdf.setTextColor(...primaryColor);
-  pdf.text(report.name, pageWidth / 2, 40, { align: 'center' });
-
-  // Report info
+  pdf.text(report.name, pageWidth / 2, pageHeight / 2, { align: 'center' });
   pdf.setFontSize(12);
   pdf.setTextColor(...secondaryColor);
-  pdf.text(`Created: ${new Date(report.createdAt).toLocaleDateString()}`, margin, 55);
-  pdf.text(`Total Snags: ${report.snags.length}`, pageWidth - margin, 55, { align: 'right' });
+  pdf.text(`Total Snags: ${report.snags.length}`, pageWidth / 2, pageHeight / 2 + 10, { align: 'center' });
+  pdf.text(`Created: ${new Date(report.createdAt).toLocaleDateString()}`, pageWidth / 2, pageHeight / 2 + 20, { align: 'center' });
+  pdf.addPage();
 
-  let yOffset = 70;
+  let yOffset = 30;
 
-  // Add snags
   for (const [index, snag] of report.snags.entries()) {
-    const snagHeight = 10 + 30 + 100 + 30;  // Title + Table + Image + Padding
+    const snagHeight = 80 + (snag.image ? 120 : 0);  // Estimated height for text + image + padding
 
-    // Check if there's enough space on the current page
     if (yOffset + snagHeight > pageHeight - 30) {
       pdf.addPage();
-      addHeaderAndFooter();
       yOffset = 30;
     }
+
+    addHeaderAndFooter();
 
     // Snag title
     pdf.setFontSize(16);
@@ -89,9 +85,19 @@ export const exportToPDF = async (report) => {
       try {
         const imgData = await fetchImageAsBase64(snag.image);
         const imgProps = pdf.getImageProperties(imgData);
-        const imgWidth = contentWidth;
-        const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-        pdf.addImage(imgData, 'JPEG', margin, yOffset, imgWidth, imgHeight, undefined, 'FAST');
+        const imgAspectRatio = imgProps.width / imgProps.height;
+        
+        let imgWidth = contentWidth;
+        let imgHeight = imgWidth / imgAspectRatio;
+        
+        // If the image is too tall, limit its height and adjust width accordingly
+        if (imgHeight > pageHeight - 60) {
+          imgHeight = pageHeight - 60;
+          imgWidth = imgHeight * imgAspectRatio;
+        }
+        
+        const xOffset = margin + (contentWidth - imgWidth) / 2; // Center the image
+        pdf.addImage(imgData, 'JPEG', xOffset, yOffset, imgWidth, imgHeight, undefined, 'FAST');
         yOffset += imgHeight + 10;
       } catch (error) {
         console.error('Error adding image to PDF:', error);
@@ -100,8 +106,7 @@ export const exportToPDF = async (report) => {
       }
     }
 
-    // Add some space between snags
-    yOffset += 20;
+    yOffset += 20;  // Space between snags
   }
 
   // Add header and footer to all pages
@@ -111,7 +116,7 @@ export const exportToPDF = async (report) => {
     addHeaderAndFooter();
   }
 
-  pdf.save(`${report.name}_report.pdf`);
+  pdf.save(`${report.name}.pdf`);
 };
 
 const fetchImageAsBase64 = async (url) => {

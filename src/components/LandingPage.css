@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
 
 :root {
-  --primary-color: #3A86FF;
-  --secondary-color: #FF9E00;
-  --accent-color: #4ECB71;
+  --primary-color: #2D78F5;  /* Match your app's primary blue */
+  --secondary-color: #20bf6b;  /* A green color for CTA */
+  --accent-color: #3498db;  /* Light blue for accents */
   --background-start: #001F3F;  /* Darker blue, matching the dashboard header */
   --background-end: #0047AB;    /* Slightly lighter blue for gradient effect */
   --box-background: rgba(255, 255, 255, 0.25);
@@ -150,6 +150,7 @@
 
 .cta-button:hover {
   transform: translateY(-2px);
+  background: #1b9e59;  /* Darker shade of the secondary color */
   box-shadow: 0 4px 15px rgba(255, 158, 0, 0.3);
 }
 
@@ -289,5 +290,143 @@
 
   .tagline {
     font-size: 1rem;
+  }
+}
+
+.cta-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.secondary-cta {
+  background: transparent;
+  border: 2px solid var(--secondary-color);
+  color: var(--secondary-color);
+}
+
+.how-it-works, .benefits, .testimonials, .demo-video, .faq, .integrations, .mobile-apps {
+  margin-top: 2rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.how-it-works ol, .benefits ul {
+  text-align: left;
+  padding-left: 1.5rem;
+}
+
+.testimonials blockquote {
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.video-placeholder {
+  background: rgba(0, 0, 0, 0.2);
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.play-icon {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.faq details {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.integration-logos {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.logo-placeholder {
+  width: 60px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
+
+.app-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.app-store, .google-play {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .cta-buttons, .app-buttons {
+    flex-direction: column;
+  }
+
+  .integration-logos {
+    flex-wrap: wrap;
+  }
+}
+
+.how-it-works-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid var(--secondary-color);
+  border-radius: 30px;
+  color: var(--secondary-color);
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.how-it-works-button:hover {
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.info-icon {
+  margin-right: 8px;
+}
+
+/* Adjust the privacy note margin */
+.privacy-note {
+  margin-top: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .how-it-works-button {
+    padding: 8px 16px;
+    font-size: 14px;
   }
 }

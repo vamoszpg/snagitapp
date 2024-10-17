@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import './LandingPage.css';
-import { FaCheckCircle, FaEnvelope, FaMagic } from 'react-icons/fa';
+import { FaCheckCircle, FaEnvelope, FaMagic, FaInfoCircle } from 'react-icons/fa';
 
 const LandingPage = ({ onEnter }) => {
   const [email, setEmail] = useState('');
@@ -21,8 +22,8 @@ const LandingPage = ({ onEnter }) => {
   };
 
   const validateEmail = (email) => {
-    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return re.test(String(email).toLowerCase());
+    // Basic email validation regex
+    return /\S+@\S+\.\S+/.test(email);
   };
 
   return (
@@ -30,9 +31,13 @@ const LandingPage = ({ onEnter }) => {
       <div className="background-animation"></div>
       <div className="landing-content glassmorphism">
         <h1 className="title-animation">Welcome to Snag It</h1>
-        <p className="tagline slide-in-top">Revolutionize Your Project Management</p>
+        <p className="tagline slide-in-top">Streamline Your Property Inspections</p>
         <div className="features">
-          {['AI-powered issue tracking', 'Real-time collaboration', 'Intuitive data visualization'].map((feature, index) => (
+          {[
+            'Efficient property inspection tracking',
+            'Comprehensive report generation',
+            'Easy PDF export for sharing'
+          ].map((feature, index) => (
             <div key={index} className={`feature slide-in-left delay-${index}`}>
               <FaCheckCircle className="feature-icon" />
               <span>{feature}</span>
@@ -56,7 +61,11 @@ const LandingPage = ({ onEnter }) => {
           </button>
         </form>
         {error && <p className="error-message">{error}</p>}
-        <p className="privacy-note fade-in">Your data is secure. We prioritize your privacy.</p>
+        <Link to="/how-it-works" className="how-it-works-button">
+          <FaInfoCircle className="info-icon" />
+          <span>How It Works</span>
+        </Link>
+        <p className="privacy-note fade-in">Your property data is secure. We prioritize your privacy.</p>
       </div>
       <div className="floating-shapes">
         <div className="shape shape1"></div>
